@@ -1,0 +1,66 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+
+# Maven
+target/
+!target/.gitkeep  # Keep .gitkeep if you want to ensure the directory exists
+
+# IDE-specific files
+.idea/
+*.iml
+*.class
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# IntelliJ IDEA
+*.ipr
+*.iws
+
+# NetBeans
+nbproject/private/
+build/
+nbbuild/
+dist/
+*.nb-gradle/
+
+# VS Code
+.vscode/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Dependency directories
+.mvn/
+**/dependency-reduced-pom.xml
+**/dependency-management.properties
+
+# Java generated files
+*.class
+
+# Other
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.tar
+*.gz
+
+# Custom files
+*.local
