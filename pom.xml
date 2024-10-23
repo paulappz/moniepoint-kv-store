@@ -25,7 +25,7 @@
                 <version>3.1.0</version>
                 <configuration>
                     <!-- Specify the main class to run -->
-                    <mainClass>kvstore.Main</mainClass>
+<!--                    <mainClass>kvstore.Main</mainClass>-->
 
                 </configuration>
                 <executions>
