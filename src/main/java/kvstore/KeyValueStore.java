@@ -23,6 +23,12 @@ public class KeyValueStore {
         System.out.println("Inserted/Updated key: " + key);
     }
 
+    // READ method for fetching a key's value
+    public String get(String key) {
+        String value = store.get(key);
+        return (value != null) ? value : "ERROR: Key not found";
+    }
+
     // Save the key/value pairs to the persistent storage
     private void saveToFile() {
         try (FileWriter writer = new FileWriter(DATA_FILE)) {
