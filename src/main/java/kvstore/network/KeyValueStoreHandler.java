@@ -27,7 +27,9 @@ public class KeyValueStoreHandler implements Runnable {
         ) {
             String inputLine;
             boolean isPutRequest = false;
+            boolean isGetRequest = false;
             int contentLength = 0;
+            String requestedKey = null; // Variable to store the requested key for GET requests
 
             // Read request line
             if ((inputLine = in.readLine()) != null) {
@@ -36,7 +38,7 @@ public class KeyValueStoreHandler implements Runnable {
                 String[] requestParts = inputLine.split(" ");
                 if (requestParts.length >= 3) {
                     String method = requestParts[0].toUpperCase();
-                    String path = requestParts[1];
+                    String path = requestParts[1]; // Ensure this variable is defined in context
                     String httpVersion = requestParts[2];
 
                     if (!httpVersion.startsWith("HTTP/")) {
@@ -44,9 +46,13 @@ public class KeyValueStoreHandler implements Runnable {
                         return;
                     }
 
-                    // Handle only PUT method
+                    // Handle PUT and GET methods
                     if ("PUT".equals(method)) {
                         isPutRequest = true;
+                    } else if ("GET".equals(method)) {
+                        isGetRequest = true;
+                        // Extract the key from the path (assuming path format is "/key")
+                        requestedKey = path.substring(1); // Remove the leading '/'
                     } else {
                         out.println("HTTP/1.1 405 Method Not Allowed");
                         return;
@@ -82,6 +88,11 @@ public class KeyValueStoreHandler implements Runnable {
                 }
             }
 
+            // Handle GET request
+            if (isGetRequest) {
+                handleGetRequest(requestedKey, out);
+            }
+
         } catch (IOException e) {
             System.err.println("Error handling client connection: " + e.getMessage());
             e.printStackTrace();
@@ -94,7 +105,7 @@ public class KeyValueStoreHandler implements Runnable {
         }
     }
 
-    // 1. Handle PUT (Single key-value Put)
+    // Handle PUT (Single key-value Put)
     private void handlePutRequest(String requestBody, PrintWriter out) throws IOException {
         String[] keyValue = requestBody.split("&");
         String key = null;
@@ -122,6 +133,23 @@ public class KeyValueStoreHandler implements Runnable {
             out.println("Content-Type: text/plain");
             out.println();
             out.println("ERROR: Invalid parameters");
+        }
+    }
+
+    // Handle GET (Retrieve value for a given key)
+    private void handleGetRequest(String key, PrintWriter out) {
+        String value = store.get(key); // Assuming you have a get method in KeyValueStore
+
+        if (value != null) {
+            out.println("HTTP/1.1 200 OK");
+            out.println("Content-Type: text/plain");
+            out.println();
+            out.println("Value: " + value);
+        } else {
+            out.println("HTTP/1.1 404 Not Found");
+            out.println("Content-Type: text/plain");
+            out.println();
+            out.println("ERROR: Key not found");
         }
     }
 }
