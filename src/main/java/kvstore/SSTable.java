@@ -11,7 +11,6 @@ public class SSTable {
     private File file;
     private TreeMap<String, String> data;  // In-memory cache of the SSTable's data
 
-    // Constructor
     private SSTable(File file, TreeMap<String, String> data) {
         this.file = file;
         this.data = data;

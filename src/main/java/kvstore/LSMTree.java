@@ -10,7 +10,11 @@ import java.util.stream.Collectors;
 public class LSMTree {
     private TreeMap<String, String> memTable = new TreeMap<>();
     private static final int MAX_MEMTABLE_SIZE = 100;
-    private List<SSTable> sstables = new ArrayList<>();
+    private List<SSTable> sstables;
+
+    {
+        sstables = new ArrayList<>();
+    }
 
     /**
      * Inserts a key-value pair into the memTable. If the value is null, the key is considered deleted.
@@ -76,6 +80,20 @@ public class LSMTree {
         }
 
         return validKeysInMemTable;
+    }
+    /**
+     * Getter for memTable to allow access to the in-memory store.
+     */
+// Getter for memTable to allow access to the in-memory store.
+    public synchronized TreeMap<String, String> getMemTable() {
+        return memTable;
+    }
+
+    /**
+     * Getter for sstables to allow access to the list of SSTables.
+     */
+    public synchronized List<SSTable> getSSTables() {
+        return sstables;
     }
 
 
