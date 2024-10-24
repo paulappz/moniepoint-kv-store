@@ -154,7 +154,14 @@ import java.util.NoSuchElementException; // Add this import
                 out.println("Content-Type: text/plain");
                 out.println();
                 out.println("ERROR: An error occurred while processing the request");
-            } finally {
+            } catch (Exception e) {
+                    // Handle communication errors with other nodes if necessary
+                    out.println("HTTP/1.1 503 Service Unavailable");
+                    out.println("Content-Type: text/plain");
+                    out.println();
+                    out.println("ERROR: Unable to communicate with the data node");
+            }
+            finally {
                 out.flush(); // Ensure the data is sent before closing the connection
             }
         }
@@ -318,5 +325,5 @@ import java.util.NoSuchElementException; // Add this import
             }
         }
 
-    }
+        }
 
