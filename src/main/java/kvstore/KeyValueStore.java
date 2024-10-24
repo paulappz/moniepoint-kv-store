@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.NoSuchElementException;
+
 
 public class KeyValueStore {
     private static final String DATA_FILE = "storage.txt"; // Persistent storage file
@@ -47,6 +49,18 @@ public class KeyValueStore {
         System.out.println("Batch Inserted/Updated keys: " + keyValuePairs.keySet());
     }
 
+    // DELETE method for removing keys
+    public void delete(String key) throws IOException {
+        validateKey(key); // Validate key only, as value is not involved
+        if (store.containsKey(key)) {
+            store.remove(key); // Remove the key from the in-memory store
+            saveToFile(); // Save the updated store to the file
+            System.out.println("Deleted key: " + key);
+        } else {
+            throw new NoSuchElementException("ERROR: Key not found");
+        }
+    }
+
     // Save the key/value pairs to the persistent storage
     private void saveToFile() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(DATA_FILE))) {
@@ -73,11 +87,16 @@ public class KeyValueStore {
         }
     }
 
-    // Validate key and value
-    private void validateKeyValue(String key, String value) {
+    // Validate key only
+    private void validateKey(String key) {
         if (key == null || key.isEmpty()) {
             throw new IllegalArgumentException("Key cannot be null or empty");
         }
+    }
+
+    // Validate both key and value
+    private void validateKeyValue(String key, String value) {
+        validateKey(key); // Reuse key validation
         if (value == null) {
             throw new IllegalArgumentException("Value cannot be null");
         }
