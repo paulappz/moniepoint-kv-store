@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.*;
 
 public class KeyValueStore {
     private static final String DATA_FILE = "storage.txt"; // Persistent storage file
@@ -27,6 +29,17 @@ public class KeyValueStore {
     public String get(String key) {
         String value = store.get(key);
         return (value != null) ? value : "ERROR: Key not found";
+    }
+
+    // READ method for fetching key-value pairs in a range
+    public List<String[]> readKeyRange(String startKey, String endKey) {
+        List<String[]> result = new ArrayList<>();
+        for (String key : store.keySet()) {
+            if (key.compareTo(startKey) >= 0 && key.compareTo(endKey) <= 0) {
+                result.add(new String[]{key, store.get(key)});
+            }
+        }
+        return result;
     }
 
     // Save the key/value pairs to the persistent storage
