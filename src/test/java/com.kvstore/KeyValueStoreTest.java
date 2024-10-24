@@ -4,8 +4,9 @@ package com.kvstore;
 import kvstore.KeyValueStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import java.util.NoSuchElementException; // Add this import
-
+import java.util.NoSuchElementException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -51,7 +52,15 @@ class KeyValueStoreTest {
         kvStore.put("keyC", "valueC");
         kvStore.delete("keyB");  // This key will be tombstoned
 
-        assertEquals(Arrays.asList("keyA", "keyC"), kvStore.readKeyRange("keyA", "keyC"));
+        List<String[]> result = kvStore.readKeyRange("keyA", "keyC");
+
+        // Extract the keys from the result
+        List<String> keys = result.stream()
+                .map(entry -> entry[0])  // Extract the first element (key) from each string array
+                .collect(Collectors.toList());
+
+        assertEquals(Arrays.asList("keyA", "keyC"), keys);
     }
+
 
 }
