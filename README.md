@@ -73,32 +73,34 @@ The system can detect node failures and automatically reroute requests to availa
    mvn test
    ```
 
-5. Directory Structure
+5 Moniepoint Key-Value Store Directory Structure
 
-        moniepoint-kv-store/
-    ├── src/                                      # Source code directory
-    │   ├── main/                                 # Main source directory
-    │   │   ├── java/                             # Java source files
-    │   │   │   ├── kvstore/                      # Package for key-value store implementation
-    │   │   │   │   ├── KeyValueStore.java        # Class for managing key-value pairs
-    │   │   │   │   ├── LRUCache.java              # Class implementing Least Recently Used Cache
-    │   │   │   │   ├── LSMTree.java               # Class implementing Log-Structured Merge Tree
-    │   │   │   │   ├── Node.java                  # Class representing a node in the LSM Tree
-    │   │   │   │   ├── SSTable.java               # Class for managing SSTables
-    │   │   │   │   ├── WriteAheadLog.java         # Class for the Write Ahead Log mechanism
-    │   │   │   │   ├── network/                   # Package for network-related components
-    │   │   │   │   │   ├── KeyValueStoreHandler.java # Class handling requests to the key-value store
-    │   │   │   │   │   ├── KeyValueStoreServer.java # Class for running the key-value store server
-    │   │   │   │   └── Main.java                  # Main entry point of the application
-    │   ├── test/                                  # Test source directory
-    │   │   ├── java/                             # Java test files
-    │   │   │   ├── com/                          # Base package for tests
-    │   │   │   │   ├── kvstore/                  # Package for tests related to key-value store
-    │   │   │   │   │   ├── KeyValueStoreTest.java # Tests for KeyValueStore functionality
-    │   │   │   │   │   ├── LRUCacheTest.java      # Tests for LRUCache functionality
-    │   │   │   │   │   ├── WriteAheadLogTest.java # Tests for WriteAheadLog functionality (if implemented)
-    ├── target/  
-    │   ├── pom.xml                                # Maven project file
+```
+moniepoint-kv-store/
+├── src/                                      # Source code directory
+│   ├── main/                                 # Main source directory
+│   │   ├── java/                             # Java source files
+│   │   │   ├── kvstore/                      # Package for key-value store implementation
+│   │   │   │   ├── KeyValueStore.java        # Class for managing key-value pairs
+│   │   │   │   ├── LRUCache.java             # Class implementing Least Recently Used Cache
+│   │   │   │   ├── LSMTree.java              # Class implementing Log-Structured Merge Tree
+│   │   │   │   ├── Node.java                 # Class representing a node in the LSM Tree
+│   │   │   │   ├── SSTable.java              # Class for managing SSTables
+│   │   │   │   ├── WriteAheadLog.java        # Class for the Write Ahead Log mechanism
+│   │   │   │   ├── network/                  # Package for network-related components
+│   │   │   │   │   ├── KeyValueStoreHandler.java # Class handling requests to the key-value store
+│   │   │   │   │   ├── KeyValueStoreServer.java  # Class for running the key-value store server
+│   │   │   │   └── Main.java                 # Main entry point of the application
+│   ├── test/                                 # Test source directory
+│   │   ├── java/                             # Java test files
+│   │   │   ├── com/                          # Base package for tests
+│   │   │   │   ├── kvstore/                  # Package for tests related to key-value store
+│   │   │   │   │   ├── KeyValueStoreTest.java # Tests for KeyValueStore functionality
+│   │   │   │   │   ├── LRUCacheTest.java     # Tests for LRUCache functionality
+│   │   │   │   │   ├── WriteAheadLogTest.java # Tests for WriteAheadLog functionality (if implemented)
+├── target/  
+│   ├── pom.xml                                # Maven project file
+```
 
 
 ### API Interfaces
