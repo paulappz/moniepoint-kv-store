@@ -1,2 +1,8 @@
 user1=Paul
+key1=user1
+key2=user2
+value2=Bob
+value1=Alice
+value=Paul
 user3=Ayo
+key=user1

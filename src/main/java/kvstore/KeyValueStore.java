@@ -4,9 +4,9 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class KeyValueStore {
     private static final String DATA_FILE = "storage.txt"; // Persistent storage file
@@ -27,26 +27,32 @@ public class KeyValueStore {
 
     // READ method for fetching a key's value
     public String get(String key) {
-        String value = store.get(key);
-        return (value != null) ? value : "ERROR: Key not found";
+        return store.getOrDefault(key, "ERROR: Key not found");
     }
 
     // READ method for fetching key-value pairs in a range
     public List<String[]> readKeyRange(String startKey, String endKey) {
-        List<String[]> result = new ArrayList<>();
-        for (String key : store.keySet()) {
-            if (key.compareTo(startKey) >= 0 && key.compareTo(endKey) <= 0) {
-                result.add(new String[]{key, store.get(key)});
-            }
+        return store.entrySet().stream()
+                .filter(entry -> entry.getKey().compareTo(startKey) >= 0 && entry.getKey().compareTo(endKey) <= 0)
+                .map(entry -> new String[]{entry.getKey(), entry.getValue()})
+                .collect(Collectors.toList());
+    }
+
+    public void batchPut(Map<String, String> keyValuePairs) throws IOException {
+        for (Map.Entry<String, String> entry : keyValuePairs.entrySet()) {
+            validateKeyValue(entry.getKey(), entry.getValue());
+            store.put(entry.getKey(), entry.getValue());
         }
-        return result;
+        saveToFile(); // Save the updated store to the file
+        System.out.println("Batch Inserted/Updated keys: " + keyValuePairs.keySet());
     }
 
     // Save the key/value pairs to the persistent storage
     private void saveToFile() {
-        try (FileWriter writer = new FileWriter(DATA_FILE)) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(DATA_FILE))) {
             for (Map.Entry<String, String> entry : store.entrySet()) {
-                writer.write(entry.getKey() + "=" + entry.getValue() + "\n");
+                writer.write(entry.getKey() + "=" + entry.getValue());
+                writer.newLine();
             }
         } catch (IOException e) {
             System.err.println("Error saving data to file: " + e.getMessage());
@@ -59,9 +65,7 @@ public class KeyValueStore {
             Files.lines(Paths.get(DATA_FILE)).forEach(line -> {
                 String[] parts = line.split("=", 2);
                 if (parts.length >= 2) {
-                    String key = parts[0];
-                    String value = parts[1];
-                    store.put(key, value);
+                    store.put(parts[0], parts[1]);
                 }
             });
         } catch (IOException e) {
