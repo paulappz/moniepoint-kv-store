@@ -1,5 +1,4 @@
 package kvstore.network;
-
 import kvstore.KeyValueStore;
 
 import java.io.BufferedReader;
@@ -7,19 +6,18 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.NoSuchElementException; // Add this import
+
 
 public class KeyValueStoreHandler implements Runnable {
-    private final Socket clientSocket;
-    private final KeyValueStore store;
+    private Socket clientSocket;
+    private KeyValueStore store;
 
     public KeyValueStoreHandler(Socket clientSocket, KeyValueStore store) {
         this.clientSocket = clientSocket;
         this.store = store;
-    }
+  }
 
     @Override
     public void run() {
@@ -37,6 +35,7 @@ public class KeyValueStoreHandler implements Runnable {
             // Read request line
             if ((inputLine = in.readLine()) != null) {
                 System.out.println("Received request line: " + inputLine);
+
                 String[] requestParts = inputLine.split(" ");
                 if (requestParts.length >= 3) {
                     String method = requestParts[0].toUpperCase();
@@ -53,6 +52,7 @@ public class KeyValueStoreHandler implements Runnable {
                         case "GET" -> handleGetRequest(path, out);
                         case "POST" -> isPostRequest = true;
                         case "PUT" -> isPutRequest = true;
+                        case "DELETE" -> handleDeleteRequest(path, out);
                         default -> {
                             out.println("HTTP/1.1 405 Method Not Allowed");
                             return;
@@ -71,16 +71,47 @@ public class KeyValueStoreHandler implements Runnable {
 
             // If it's a POST request, handle it
             if (isPostRequest) {
-                handleRequestBody(in, contentLength, out, this::handlePostRequest);
+                if (contentLength > 0) {
+                    char[] bodyChars = new char[contentLength];
+                    int readChars = in.read(bodyChars, 0, contentLength);
+                    if (readChars != contentLength) {
+                        System.err.println("Warning: Expected to read " + contentLength + " characters but read " + readChars);
+                    }
+                    String requestBody = new String(bodyChars);
+                    System.out.println("Received POST body: " + requestBody);
+
+                    handlePostRequest(requestBody, out);
+                } else {
+                    out.println("HTTP/1.1 400 Bad Request");
+                    out.println("Content-Type: text/plain");
+                    out.println();
+                    out.println("ERROR: Missing POST body");
+                }
             }
 
             // If it's a PUT request, handle it separately
             if (isPutRequest) {
-                handleRequestBody(in, contentLength, out, this::handlePutRequest);
+                if (contentLength > 0) {
+                    char[] bodyChars = new char[contentLength];
+                    int readChars = in.read(bodyChars, 0, contentLength);
+                    if (readChars != contentLength) {
+                        System.err.println("Warning: Expected to read " + contentLength + " characters but read " + readChars);
+                    }
+                    String requestBody = new String(bodyChars);
+                    System.out.println("Received PUT body: " + requestBody);
+
+                    handlePutRequest(requestBody, out);
+                } else {
+                    out.println("HTTP/1.1 400 Bad Request");
+                    out.println("Content-Type: text/plain");
+                    out.println();
+                    out.println("ERROR: Missing PUT body");
+                }
             }
 
         } catch (IOException e) {
             System.err.println("Error handling client connection: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             try {
                 clientSocket.close();
@@ -90,30 +121,9 @@ public class KeyValueStoreHandler implements Runnable {
         }
     }
 
-    // Common method to handle request bodies for POST and PUT
-    private void handleRequestBody(BufferedReader in, int contentLength, PrintWriter out, RequestHandler handler) throws IOException {
-        if (contentLength > 0) {
-            char[] bodyChars = new char[contentLength];
-            int readChars = in.read(bodyChars, 0, contentLength);
-            if (readChars != contentLength) {
-                System.err.println("Warning: Expected to read " + contentLength + " characters but read " + readChars);
-            }
-            String requestBody = new String(bodyChars);
-            System.out.println("Received body: " + requestBody);
-            handler.handle(requestBody, out);
-        } else {
-            out.println("HTTP/1.1 400 Bad Request");
-            out.println("Content-Type: text/plain");
-            out.println();
-            out.println("ERROR: Missing request body");
-        }
-    }
 
-    // Functional interface for request handling
-    @FunctionalInterface
-    interface RequestHandler {
-        void handle(String requestBody, PrintWriter out) throws IOException;
-    }
+
+
 
     // 1. Handle Get (Read)
     private void handleGetRequest(String path, PrintWriter out) {
@@ -137,6 +147,11 @@ public class KeyValueStoreHandler implements Runnable {
                 out.println();
                 out.println("ERROR: Key not found");
             }
+        } catch (NoSuchElementException e) {
+            out.println("HTTP/1.1 404 Not Found");
+            out.println("Content-Type: text/plain");
+            out.println();
+            out.println(e.getMessage()); // Return the custom error message from the exception
         } catch (IOException e) {
             out.println("HTTP/1.1 500 Internal Server Error");
             out.println("Content-Type: text/plain");
@@ -190,7 +205,6 @@ public class KeyValueStoreHandler implements Runnable {
             out.println("ERROR: Invalid range request format");
         }
     }
-
     // 3. Handle Post (BatchPut)
     private void handlePostRequest(String requestBody, PrintWriter out) throws IOException {
         // Decode the URL-encoded request body
@@ -233,38 +247,54 @@ public class KeyValueStoreHandler implements Runnable {
             out.flush();
         }
     }
-
-    // 4. Handle Put (Single Put)
+    // 4. Handle PUT (Single key-value Put)
     private void handlePutRequest(String requestBody, PrintWriter out) throws IOException {
-        try {
-            String[] keyValue = requestBody.split("=");
-            if (keyValue.length == 2) {
-                String key = keyValue[0].trim();
-                String value = keyValue[1].trim();
-                store.put(key, value);
-                out.println("HTTP/1.1 200 OK");
-                out.println("Content-Type: text/plain");
-                out.println();
-                out.println("Successfully inserted/updated key: " + key);
-            } else {
-                out.println("HTTP/1.1 400 Bad Request");
-                out.println("Content-Type: text/plain");
-                out.println();
-                out.println("ERROR: Invalid key-value pair format in request body");
+        String[] keyValue = requestBody.split("&");
+        String key = null;
+        String value = null;
+
+        for (String pair : keyValue) {
+            String[] kv = pair.split("=");
+            if (kv.length == 2) {
+                if ("key".equals(kv[0].trim())) {
+                    key = kv[1].trim();
+                } else if ("value".equals(kv[0].trim())) {
+                    value = kv[1].trim();
+                }
             }
-        } catch (IllegalArgumentException e) {
+        }
+
+        if (key != null && value != null) {
+            store.put(key, value);
+            out.println("HTTP/1.1 200 OK");
+            out.println("Content-Type: text/plain");
+            out.println();
+            out.println("OK: Key stored");
+        } else {
             out.println("HTTP/1.1 400 Bad Request");
             out.println("Content-Type: text/plain");
             out.println();
-            out.println("ERROR: " + e.getMessage());
-        } catch (IOException e) {
-            out.println("HTTP/1.1 500 Internal Server Error");
-            out.println("Content-Type: text/plain");
-            out.println();
-            out.println("ERROR: An error occurred while processing the request");
-        } finally {
-            // Ensure the data is sent before closing the connection
-            out.flush();
+            out.println("ERROR: Invalid parameters");
         }
     }
+
+    // 4. Handle DELETE
+    private void handleDeleteRequest(String path, PrintWriter out) throws IOException {
+        String key = path.substring(1); // Assume path is like "/key"
+        try {
+            store.delete(key);
+            out.println("HTTP/1.1 200 OK");
+            out.println("Content-Type: text/plain");
+            out.println();
+            out.println("OK: Key deleted");
+        } catch (IOException e) {
+            // If key is not found, respond with a 404 Not Found
+            out.println("HTTP/1.1 404 Not Found");
+            out.println("Content-Type: text/plain");
+            out.println();
+            out.println(e.getMessage()); // Return the error message from the exception
+        }
+    }
+
 }
+
