@@ -152,26 +152,39 @@ The following operations are available for interacting with the Key-Value Store:
 - CURL Response: `ERROR: Key not found or already deleted`
 
 
-##Trade-offs Made to Achieve Objectives
+### Trade-offs Made to Achieve Objectives
+
 
  **Performance vs. Consistency:**
+ 
 In a distributed system, prioritizing high availability and low latency might compromise strong consistency. This implementation employs eventual consistency for replication, ensuring that data is quickly accessible on each active node, even if some nodes haven’t fully synchronized. This supports low-latency and high-throughput objectives but could result in brief periods of inconsistency between nodes.
 
 
 **Memory vs. Disk Persistence:**
+
 To handle large datasets exceeding the available RAM, this system leverages Log-Structured Merge (LSM) trees. LSM trees minimize in-memory data storage by using an on-disk structure for efficient reads and writes. While this enables handling larger-than-RAM datasets, it can incur read penalties as data is merged from multiple levels on disk, impacting read latency.
 
+
 **Write Throughput vs. Recovery Speed:**
+
 Write-Ahead Logging (WAL) ensures data persistence before changes reach the main data structure. WAL enables quick recovery from crashes by replaying logs, which is essential for crash friendliness. However, this slightly slows down write throughput due to the overhead of logging each operation.
 
+
 **Replication Overhead vs. Fault Tolerance:**
+
 Replicating data to multiple nodes increases fault tolerance, but incurs additional network latency and storage requirements, impacting throughput. This system adopts asynchronous replication to balance fault tolerance and write performance, allowing nodes to continue serving requests during the replication process without waiting for all nodes to sync.
 
+
 **Cache Size vs. Memory Constraints:**
+
 An LRU (Least Recently Used) cache accelerates frequently accessed data, but a larger cache consumes more memory, potentially impacting other parts of the application. This design uses a moderately-sized cache to improve read speeds without overcommitting RAM, balancing memory usage with read performance.
 
+
 **Batch Processing vs. Real-Time Responsiveness:**
+
 Batch operations, such as BatchPut, offer high throughput by reducing per-operation overhead. However, processing large batches can delay real-time responses in concurrent scenarios. This system prioritizes throughput in batch processing while ensuring the ability to handle real-time single operations efficiently.
+
+
 Each trade-off was carefully chosen to ensure the system meets Moniepoint’s key objectives for durability, performance, scalability, and resilience under heavy load conditions, while remaining flexible to handle evolving requirements.
 
 
